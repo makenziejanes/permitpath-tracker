@@ -25,6 +25,7 @@ export async function POST(req) {
 }
 
 export async function DELETE(req) {
+  if (!checkCode(req)) return json({ error: 'Your team code is missing or wrong.', code: 'team_code' }, 401);
   const { endpoint } = await req.json();
   await ready();
   if (endpoint) await db()`delete from push_subs where endpoint = ${endpoint}`;

@@ -58,6 +58,7 @@ export default function App() {
   const [me, setMe] = useState(null);
   const [data, setData] = useState(null);
   const [loadError, setLoadError] = useState('');
+  const [needCode, setNeedCode] = useState(false);
   const [tab, setTab] = useState('today');
   const [goalOpen, setGoalOpen] = useState(null);
   const [checkinOpen, setCheckinOpen] = useState(false);
@@ -68,8 +69,14 @@ export default function App() {
   const toastTimer = useRef();
 
   const load = useCallback(async () => {
-    try { setData(await getJSON('/api/state')); setLoadError(''); }
-    catch (e) { setLoadError(e.message); }
+    try { setData(await getJSON('/api/state')); setLoadError(''); setNeedCode(false); }
+    catch (e) {
+      setLoadError(e.message);
+      // Reading the dashboard needs the team code too, so a missing or wrong one sends the device back to the picker.
+      const codeProblem = e.code === 'team_code';
+      if (codeProblem) setData(null);
+      setNeedCode(codeProblem);
+    }
   }, []);
 
   useEffect(() => {
@@ -100,12 +107,15 @@ export default function App() {
     store.set('pp-me', who);
     if (code) store.set('pp-code', code.trim());
     setMe(who);
+    load();
     // If this device already had notifications on for someone else, re-point them.
     if (who !== 'viewer') currentSubscription().then((s) => s && savePush(who, s)).catch(() => {});
   };
 
   if (!mounted) return null;
-  if (!me) return <Picker codeRequired={data?.codeRequired} onPick={pick} />;
+  if (!me || needCode) {
+    return <Picker codeRequired={data?.codeRequired || needCode} wrongCode={needCode && Boolean(store.get('pp-code'))} onPick={pick} />;
+  }
   if (!data) {
     return (
       <main className="loading">

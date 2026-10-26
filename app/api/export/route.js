@@ -1,4 +1,4 @@
-import { db, ready } from '@/lib/server';
+import { db, ready, json, checkCode } from '@/lib/server';
 import { fmtTime, weekdaysBetween, dow } from '@/lib/dates';
 import { nameOf } from '@/lib/people';
 
@@ -15,6 +15,7 @@ function csv(rows) {
 }
 
 export async function GET(req) {
+  if (!checkCode(req)) return json({ error: 'Your team code is missing or wrong.', code: 'team_code' }, 401);
   await ready();
   const sql = db();
   const what = new URL(req.url).searchParams.get('what') || 'log';

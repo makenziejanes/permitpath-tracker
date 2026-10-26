@@ -1,8 +1,9 @@
-import { db, ready, json } from '@/lib/server';
+import { db, ready, json, checkCode } from '@/lib/server';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(req) {
+  if (!checkCode(req)) return json({ error: 'Your team code is missing or wrong.', code: 'team_code' }, 401);
   try {
     await ready();
     const sql = db();

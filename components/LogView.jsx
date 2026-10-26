@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState, useCallback } from 'react';
-import { getJSON } from '@/lib/client';
+import { getJSON, downloadCSV } from '@/lib/client';
 import { fmtDay, fmtTime, weekdaysBetween } from '@/lib/dates';
 import { nameOf } from '@/lib/people';
 
@@ -31,6 +31,7 @@ export default function LogView({ canEdit, onResolve, onReopen, version }) {
 
   const resolve = async (b) => { await onResolve(b); load(); };
   const reopen = async (b) => { await onReopen(b); load(); };
+  const exportCSV = (url) => downloadCSV(url).catch((e) => setError(e.message));
 
   if (error) return <p className="error">{error}</p>;
   if (!data) return <p className="hint">Loading the log…</p>;
@@ -47,8 +48,8 @@ export default function LogView({ canEdit, onResolve, onReopen, version }) {
       <div className="section-head">
         <h2 id="log-h">Check-in log</h2>
         <div className="exports">
-          <a className="btn btn-quiet" href="/api/export" download>Export log (CSV)</a>
-          <a className="btn btn-quiet" href="/api/export?what=items" download>Export items (CSV)</a>
+          <button type="button" className="btn btn-quiet" onClick={() => exportCSV('/api/export')}>Export log (CSV)</button>
+          <button type="button" className="btn btn-quiet" onClick={() => exportCSV('/api/export?what=items')}>Export items (CSV)</button>
         </div>
       </div>
       {!dates.length && <p className="empty">Morning plans and 8pm check-ins will show up here, one day at a time.</p>}

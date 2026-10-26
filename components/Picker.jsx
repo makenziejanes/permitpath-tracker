@@ -3,7 +3,7 @@ import { useState } from 'react';
 import Badge from './Badge';
 import { PEOPLE } from '@/lib/people';
 
-export default function Picker({ codeRequired, onPick }) {
+export default function Picker({ codeRequired, wrongCode, onPick }) {
   const [code, setCode] = useState('');
   return (
     <main className="picker">
@@ -15,6 +15,7 @@ export default function Picker({ codeRequired, onPick }) {
           <input value={code} onChange={(e) => setCode(e.target.value)} autoComplete="off" autoCapitalize="none" placeholder="Only needed once per device" />
         </label>
       )}
+      {wrongCode && <p className="error" role="alert">That team code didn’t work. Check it and try again.</p>}
       <div className="picker-btns">
         {Object.values(PEOPLE).map((p) => (
           <button key={p.id} type="button" className={`pick pick-${p.id}`} onClick={() => onPick(p.id, code)}>
@@ -22,7 +23,7 @@ export default function Picker({ codeRequired, onPick }) {
           </button>
         ))}
       </div>
-      <button type="button" className="link" onClick={() => onPick('viewer', '')}>Just looking (view only)</button>
+      <button type="button" className="link" onClick={() => onPick('viewer', code)}>Just looking (view only)</button>
     </main>
   );
 }
