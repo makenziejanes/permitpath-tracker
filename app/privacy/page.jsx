@@ -10,11 +10,8 @@ export default function Privacy() {
     <div className="bk-page">
     <main className="bk bk-narrow">
       <header className="bk-head">
-        <img src="/icon-192.png" alt="" width="48" height="48" />
-        <div>
-          <p className="bk-brand">PermitPath</p>
-          <h1>Privacy</h1>
-        </div>
+        <a href="/book" className="bk-logo"><img src="/permitpath-logo.png" alt="PermitPath" width="816" height="208" /></a>
+        <h1>Privacy</h1>
       </header>
       <div className="bk-card">
         <p className="bk-muted">Last updated October 31, 2026</p>

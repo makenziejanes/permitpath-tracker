@@ -38,9 +38,9 @@
   box-shadow: var(--b-shadow);
 }
 .bk-hero::after { content: ''; position: absolute; inset: auto -60px -80px auto; width: 220px; height: 220px; border-radius: 50%; border: 36px solid rgb(255 255 255 / 0.07); pointer-events: none; }
-.bk-logo { display: flex; align-items: center; gap: 10px; font: 800 14px/1 var(--display); letter-spacing: 0.08em; text-transform: uppercase; }
-.bk-logo img, .bk-head img { filter: hue-rotate(75deg) saturate(1.2); } /* app icon is green; shift it to the page's blue */
-.bk-logo img { border-radius: 9px; }
+/* The logo has a white background, so it always sits on a white badge (works on the blue panel and in dark mode). */
+.bk-logo { justify-self: start; display: inline-flex; padding: 10px 14px; border-radius: 14px; background: #fff; box-shadow: 0 4px 14px rgb(15 31 58 / 0.18); }
+.bk-logo img { display: block; width: 168px; height: auto; }
 .bk-faces { display: flex; }
 .bk-faces span { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; font: 800 18px/1 var(--display);
   background: #fff; color: #1e40af; border: 3px solid var(--b-hero-2); }
@@ -134,9 +134,7 @@
 .bk-foot a { color: var(--b-muted); }
 
 /* ---------- privacy page ---------- */
-.bk-head { display: flex; align-items: center; gap: 14px; }
-.bk-head img { border-radius: 12px; flex: none; }
-.bk-brand { margin: 0; font: 800 13px/1 var(--display); letter-spacing: 0.08em; text-transform: uppercase; color: var(--b-blue-ink); }
+.bk-head { display: grid; gap: 18px; justify-items: start; }
 .bk-head h1 { font-size: clamp(24px, 6vw, 32px); font-weight: 900; }
 .bk-card { background: var(--b-surface); border: 1px solid var(--b-line); border-radius: 18px; box-shadow: var(--b-shadow); padding: 22px; display: grid; gap: 12px; }
 .bk-card h2 { font-size: 20px; font-weight: 800; margin-top: 6px; }

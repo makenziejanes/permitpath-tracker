@@ -162,8 +162,7 @@ export default function BookingPage() {
       <main className="bk">
         <aside className="bk-hero">
           <div className="bk-logo">
-            <img src="/icon-192.png" alt="" width="36" height="36" />
-            <span>PermitPath</span>
+            <img src="/permitpath-logo.png" alt="PermitPath" width="816" height="208" />
           </div>
           <div className="bk-faces" aria-hidden="true"><span>M</span><span>C</span></div>
           <h1>Meet with Makenzie &amp; Collin</h1>
