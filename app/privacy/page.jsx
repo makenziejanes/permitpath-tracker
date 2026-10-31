@@ -7,7 +7,8 @@ export const metadata = {
 
 export default function Privacy() {
   return (
-    <main className="bk">
+    <div className="bk-page">
+    <main className="bk bk-narrow">
       <header className="bk-head">
         <img src="/icon-192.png" alt="" width="48" height="48" />
         <div>
@@ -26,5 +27,6 @@ export default function Privacy() {
         <p>Email <a href="mailto:makenzie@permitpathcities.com">makenzie@permitpathcities.com</a> and we’ll answer or delete your information.</p>
       </div>
     </main>
+    </div>
   );
 }

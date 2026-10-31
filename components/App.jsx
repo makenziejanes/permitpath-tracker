@@ -205,10 +205,22 @@ export default function App() {
     <div className="app">
       <header className="top">
         <div className="brand"><Badge /><div><h1>PermitPath HQ</h1><p>{fmtDay(data.today, { weekday: 'long', month: 'long', day: 'numeric' })}</p></div></div>
-        <button type="button" className="me-btn" onClick={() => setSettingsOpen(true)} aria-label="Settings and notifications">
-          {canEdit ? nameOf(me) : 'Viewing'}
-          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3a5 5 0 0 0-5 5v3l-1.5 2.5h13L15 11V8a5 5 0 0 0-5-5zM8 16a2 2 0 0 0 4 0" /></svg>
-        </button>
+        <div className="top-actions">
+          <div className="book-pill">
+            <a href="/book" target="_blank" rel="noopener" className="me-btn" aria-label="Open the booking page">
+              <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="4.5" width="14" height="12" rx="2" /><path d="M3 8.5h14M7 2.5v4M13 2.5v4" /></svg>
+              Book
+            </a>
+            <button type="button" className="me-btn book-copy" aria-label="Copy booking link"
+              onClick={() => navigator.clipboard.writeText(`${location.origin}/book`).then(() => say('Booking link copied.'), () => say(`${location.origin}/book`))}>
+              <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="2" /><path d="M13 4.5V4a1.5 1.5 0 0 0-1.5-1.5h-7A1.5 1.5 0 0 0 3 4v7a1.5 1.5 0 0 0 1.5 1.5H5" /></svg>
+            </button>
+          </div>
+          <button type="button" className="me-btn" onClick={() => setSettingsOpen(true)} aria-label="Settings and notifications">
+            {canEdit ? nameOf(me) : 'Viewing'}
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3a5 5 0 0 0-5 5v3l-1.5 2.5h13L15 11V8a5 5 0 0 0-5-5zM8 16a2 2 0 0 0 4 0" /></svg>
+          </button>
+        </div>
       </header>
 
       <nav className="tabs" aria-label="Sections">

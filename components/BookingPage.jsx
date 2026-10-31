@@ -6,10 +6,24 @@ const STATES = ['AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'DC', 'FL', 'GA'
   'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'];
 
 const myTz = () => Intl.DateTimeFormat().resolvedOptions().timeZone;
+const fmt = (iso, o) => new Intl.DateTimeFormat('en-US', o).format(new Date(iso));
 const dayKey = (iso) => new Intl.DateTimeFormat('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(iso));
-const dayLabel = (iso) => new Intl.DateTimeFormat('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).format(new Date(iso));
-const timeLabel = (iso) => new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit' }).format(new Date(iso));
-const fullLabel = (iso) => new Intl.DateTimeFormat('en-US', { weekday: 'long', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZoneName: 'short' }).format(new Date(iso));
+const timeLabel = (iso) => fmt(iso, { hour: 'numeric', minute: '2-digit' });
+const fullLabel = (iso) => fmt(iso, { weekday: 'long', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZoneName: 'short' });
+
+const Icon = ({ d, ...p }) => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" {...p}><path d={d} /></svg>
+);
+const I = {
+  clock: 'M12 7v5l3 2M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z',
+  video: 'M15 10l5-3v10l-5-3M4 7h11v10H4z',
+  free: 'M5 12l4 4L19 6',
+  map: 'M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14',
+  chat: 'M4 5h16v11H8l-4 4z',
+  bolt: 'M13 3L5 14h6l-1 7 8-11h-6z',
+  check: 'M5 12l4 4L19 6',
+  back: 'M15 6l-6 6 6 6',
+};
 
 export default function BookingPage() {
   const [data, setData] = useState(null);
@@ -48,58 +62,79 @@ export default function BookingPage() {
     setBusy(false);
   };
 
+  const step = done ? 3 : slot ? 2 : 1;
+
   let body;
   if (done) {
     body = (
-      <div className="bk-card bk-done">
-        <h2>You’re booked</h2>
-        <p><b>{fullLabel(done)}</b></p>
-        <p>A calendar invite with a Google Meet link is on its way to <b>{form.email}</b>. Talk soon!</p>
+      <div className="bk-done">
+        <div className="bk-done-mark"><Icon d={I.check} /></div>
+        <h2>You’re booked!</h2>
+        <p className="bk-done-when">{fullLabel(done)}</p>
+        <p>A calendar invite with a Google Meet link is on its way to <b>{form.email}</b>. We’re looking forward to meeting you.</p>
       </div>
     );
   } else if (!data) {
-    body = <div className="bk-card"><p className="bk-muted">Loading open times…</p></div>;
+    body = (
+      <div className="bk-loading" aria-live="polite">
+        <span className="sr">Loading open times…</span>
+        <div className="bk-skel bk-skel-strip" />
+        <div className="bk-skel-grid">{Array.from({ length: 8 }, (_, i) => <div key={i} className="bk-skel" />)}</div>
+      </div>
+    );
   } else if (!data.open || !data.slots.length) {
     body = (
-      <div className="bk-card">
-        <p>{data.error || (data.open ? 'We’re fully booked for the next few weeks.' : 'Online booking isn’t open yet.')}</p>
-        <p className="bk-muted">Email <a href="mailto:makenzie@permitpathcities.com">makenzie@permitpathcities.com</a> and we’ll find a time.</p>
+      <div className="bk-empty">
+        <h2>{data.error ? 'Something went wrong' : data.open ? 'We’re fully booked' : 'Booking opens soon'}</h2>
+        <p>{data.error || (data.open ? 'There are no open times in the next few weeks.' : 'Online booking isn’t open yet.')}</p>
+        <p>Email <a href="mailto:makenzie@permitpathcities.com">makenzie@permitpathcities.com</a> and we’ll find a time that works.</p>
       </div>
     );
   } else if (!slot) {
     const times = days.find(([k]) => k === day)?.[1] || [];
     body = (
-      <div className="bk-card">
-        <h2>Pick a time</h2>
-        <div className="bk-len" role="radiogroup" aria-label="Meeting length">
-          {(data.lengths || [15, 30]).map((m) => (
-            <button key={m} type="button" role="radio" aria-checked={m === minutes} className={`bk-day${m === minutes ? ' on' : ''}`} onClick={() => setMinutes(m)}>
-              {m} min
-            </button>
-          ))}
+      <>
+        <div className="bk-section-head">
+          <h2>Pick a time</h2>
+          <div className="bk-seg" role="radiogroup" aria-label="Meeting length">
+            {(data.lengths || [15, 30]).map((m) => (
+              <button key={m} type="button" role="radio" aria-checked={m === minutes} className={m === minutes ? 'on' : ''} onClick={() => setMinutes(m)}>
+                {m} min
+              </button>
+            ))}
+          </div>
         </div>
-        <p className="bk-muted">Google Meet · times shown in {myTz().replace(/_/g, ' ')}</p>
         <div className="bk-days" role="tablist" aria-label="Day">
           {days.map(([k, list]) => (
             <button key={k} type="button" role="tab" aria-selected={k === day} className={`bk-day${k === day ? ' on' : ''}`} onClick={() => setDay(k)}>
-              {dayLabel(list[0])}
+              <span className="bk-day-wd">{fmt(list[0], { weekday: 'short' })}</span>
+              <span className="bk-day-n">{fmt(list[0], { day: 'numeric' })}</span>
+              <span className="bk-day-m">{fmt(list[0], { month: 'short' })}</span>
             </button>
           ))}
         </div>
+        <p className="bk-dayline">
+          <b>{day && times[0] ? fmt(times[0], { weekday: 'long', month: 'long', day: 'numeric' }) : ''}</b>
+          <span>Times in {myTz().replace(/_/g, ' ')}</span>
+        </p>
         <div className="bk-times">
           {times.map((s) => <button key={s} type="button" className="bk-time" onClick={() => setSlot(s)}>{timeLabel(s)}</button>)}
         </div>
-      </div>
+      </>
     );
   } else {
     body = (
-      <form className="bk-card bk-form" onSubmit={submit}>
+      <form className="bk-form" onSubmit={submit}>
         <div className="bk-picked">
-          <span><b>{fullLabel(slot)}</b> · {data.minutes} min</span>
-          <button type="button" className="bk-link" onClick={() => { setSlot(null); setErr(''); }}>Change</button>
+          <button type="button" className="bk-back" onClick={() => { setSlot(null); setErr(''); }} aria-label="Pick a different time"><Icon d={I.back} /></button>
+          <div>
+            <b>{fullLabel(slot)}</b>
+            <span>{minutes} minutes · Google Meet</span>
+          </div>
         </div>
+        <h2>Your details</h2>
         <label>Your name<input required value={form.name} onChange={set('name')} autoComplete="name" /></label>
-        <label><span>Job title <span className="bk-muted">(optional)</span></span><input value={form.role} onChange={set('role')} autoComplete="organization-title" /></label>
+        <label><span>Job title <span className="bk-opt">(optional)</span></span><input value={form.role} onChange={set('role')} autoComplete="organization-title" /></label>
         <div className="bk-row">
           <label>City<input required value={form.city} onChange={set('city')} autoComplete="address-level2" /></label>
           <label>State
@@ -110,29 +145,60 @@ export default function BookingPage() {
           </label>
         </div>
         <label>Work email<input required type="email" value={form.email} onChange={set('email')} autoComplete="email" placeholder="you@yourcity.gov" />
-          <span className="bk-muted bk-small">Please use your city email address.</span>
+          <span className="bk-help">Please use your city email address.</span>
         </label>
-        <label><span>What would you like to talk about? <span className="bk-muted">(optional)</span></span>
+        <label><span>What would you like to talk about? <span className="bk-opt">(optional)</span></span>
           <textarea rows={3} value={form.notes} onChange={set('notes')} />
         </label>
         <label className="bk-hp" aria-hidden="true">Website<input tabIndex={-1} autoComplete="off" value={form.website} onChange={set('website')} /></label>
         {err && <p className="bk-err" role="alert">{err}</p>}
-        <button type="submit" className="bk-submit" disabled={busy}>{busy ? 'Booking…' : 'Book meeting'}</button>
+        <button type="submit" className="bk-submit" disabled={busy}>{busy ? 'Booking…' : 'Confirm meeting'}</button>
       </form>
     );
   }
 
   return (
-    <main className="bk">
-      <header className="bk-head">
-        <img src="/icon-192.png" alt="" width="48" height="48" />
-        <div>
-          <p className="bk-brand">PermitPath</p>
+    <div className="bk-page">
+      <main className="bk">
+        <aside className="bk-hero">
+          <div className="bk-logo">
+            <img src="/icon-192.png" alt="" width="36" height="36" />
+            <span>PermitPath</span>
+          </div>
+          <div className="bk-faces" aria-hidden="true"><span>M</span><span>C</span></div>
           <h1>Meet with Makenzie &amp; Collin</h1>
-        </div>
-      </header>
-      <p className="bk-intro">A short call to show your city how PermitPath helps new businesses get through permitting, and to hear what your team needs.</p>
-      {body}
-    </main>
+          <p className="bk-intro">A short call to show your city how PermitPath helps new businesses get through permitting, and to hear what your team needs.</p>
+          <ul className="bk-chips">
+            <li><Icon d={I.clock} />15 or 30 min</li>
+            <li><Icon d={I.video} />Google Meet</li>
+            <li><Icon d={I.free} />No cost</li>
+          </ul>
+          <div className="bk-cover">
+            <p>What we’ll cover</p>
+            <ul>
+              <li><Icon d={I.map} />How PermitPath walks new businesses through your city’s permits</li>
+              <li><Icon d={I.bolt} />Where applicants get stuck today, and how we can help</li>
+              <li><Icon d={I.chat} />Your team’s questions</li>
+            </ul>
+          </div>
+        </aside>
+
+        <section className="bk-panel">
+          <ol className="bk-steps" aria-label="Steps">
+            {['Time', 'Details', 'Done'].map((s, i) => (
+              <li key={s} className={i + 1 === step ? 'on' : i + 1 < step ? 'past' : ''} aria-current={i + 1 === step ? 'step' : undefined}>
+                <span>{i + 1 < step ? <Icon d={I.check} /> : i + 1}</span>{s}
+              </li>
+            ))}
+          </ol>
+          {body}
+        </section>
+      </main>
+      <footer className="bk-foot">
+        <span>© PermitPath</span>
+        <a href="/privacy">Privacy</a>
+        <a href="mailto:makenzie@permitpathcities.com">Contact</a>
+      </footer>
+    </div>
   );
 }
