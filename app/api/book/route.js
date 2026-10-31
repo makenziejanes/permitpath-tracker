@@ -51,21 +51,28 @@ export async function POST(req) {
   // Makenzie's calendar holds the meeting when connected; everyone else is invited.
   const host = accounts.find((a) => a.person === 'makenzie') || accounts[0];
   const team = accounts.filter((a) => a !== host).map((a) => ({ email: a.email }));
-  const flag = check.ok ? '' : '⚠️ CHECK EMAIL · ';
+  // The guest sees the title and description in their Google invite, so nothing internal goes there.
+  // A doubtful email only turns the event red on the host's own calendar (colors aren't shared) and sends us the alert below.
   const description = [
-    `Booked through the PermitPath booking page.`,
+    `Thanks for booking a call with PermitPath! Join with the Google Meet link in this invite.`,
     ``,
     `Name: ${f.name}${f.role ? `, ${f.role}` : ''}`,
     `City: ${f.city}, ${f.state}`,
-    `Email: ${f.email}`,
-    f.notes ? `\nWhat they'd like to cover:\n${f.notes}` : '',
-    check.ok ? '' : `\n⚠️ This email may not be a real city address:\n- ${check.reasons.join('\n- ')}`,
+    f.notes ? `\nWhat you'd like to cover:\n${f.notes}` : '',
+    ``,
+    `Need a different time? Reply to this invite or email makenzie@permitpathcities.com.`,
+    ``,
+    `Makenzie & Collin, PermitPath`,
   ].join('\n');
 
   try {
     const ev = await createEvent(host, {
-      summary: `${flag}PermitPath × ${f.city}, ${f.state} (${f.name}, ${minutes} min)`,
+      summary: `PermitPath × ${f.city}, ${f.state}`,
       description,
+      ...(check.ok ? {} : { colorId: '11' }),
+      extendedProperties: { private: { bookingId: String(row.id), emailCheck: check.ok ? 'ok' : check.reasons.join(' ') } },
+      guestsCanModify: false,
+      guestsCanInviteOthers: true,
       start: { dateTime: new Date(f.start).toISOString(), timeZone: BOOKING.tz },
       end: { dateTime: new Date(end).toISOString(), timeZone: BOOKING.tz },
       attendees: [{ email: f.email, displayName: f.name }, ...team],
@@ -82,7 +89,7 @@ export async function POST(req) {
   const when = formatWhen(f.start);
   const payload = check.ok
     ? { title: `New meeting: ${f.city}, ${f.state}`, body: `${f.name} (${f.email}) booked ${minutes} min on ${when}.`, tag: `booking-${row.id}` }
-    : { title: `⚠️ Check this booking: ${f.city}, ${f.state}`, body: `${f.name} booked ${when} with ${f.email}. ${check.reasons.join(' ')}`, tag: `booking-${row.id}` };
+    : { title: `⚠️ Check this booking: ${f.city}, ${f.state}`, body: `${f.name} booked ${when} with ${f.email}. ${check.reasons.join(' ')} It's red on your calendar.`, tag: `booking-${row.id}` };
   await Promise.all(PERSON_IDS.map((p) => notify(p, payload).catch(() => {})));
 
   return json({ ok: true, when });

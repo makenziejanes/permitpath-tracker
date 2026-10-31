@@ -60,6 +60,12 @@ export default function BookingPage() {
   const load = (m = minutes) => fetch(`/api/book/slots?minutes=${m}`, { cache: 'no-store' }).then((r) => r.json()).then(setData)
     .catch(() => setData({ open: false, slots: [], error: 'We couldn’t load open times. Check your connection and refresh.' }));
   useEffect(() => { setData(null); load(minutes); }, [minutes]);
+  // While someone is choosing, re-check every minute so times others just booked drop off.
+  useEffect(() => {
+    if (slot || done) return;
+    const t = setInterval(() => { if (document.visibilityState === 'visible') load(); }, 60000);
+    return () => clearInterval(t);
+  }, [slot, done]);
 
   const days = useMemo(() => {
     const m = new Map();
@@ -94,7 +100,7 @@ export default function BookingPage() {
         <div className="bk-done-mark"><Icon d={I.check} /></div>
         <h2>You’re booked!</h2>
         <p className="bk-done-when">{fullLabel(done, tz)}</p>
-        <p>A calendar invite with a Google Meet link is on its way to <b>{form.email}</b>. We’re looking forward to meeting you.</p>
+        <p>Check <b>{form.email}</b> for a Google Calendar invite with the Google Meet link. Click <b>Yes</b> in the invite to add it to your calendar. We’re looking forward to meeting you.</p>
       </div>
     );
   } else if (!data) {
