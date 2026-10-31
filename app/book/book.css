@@ -153,3 +153,4 @@
 .bk-zone.guess span { color: var(--b-blue-ink); font-weight: 600; }
 .bk-link { border: 0; background: none; padding: 0; color: var(--b-blue-ink); font: inherit; font-weight: 700; text-decoration: underline; }
 @media (prefers-reduced-motion: reduce) { .bk-zone { transition: none; } }
+.bk-len-note { padding: 6px 12px; border-radius: 999px; background: var(--b-blue-soft); color: var(--b-blue-ink); font-size: 14px; font-weight: 700; }

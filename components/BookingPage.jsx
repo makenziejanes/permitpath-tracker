@@ -52,7 +52,7 @@ export default function BookingPage() {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   const [done, setDone] = useState(null);
-  const [minutes, setMinutes] = useState(30);
+  const minutes = 30; // every meeting holds 30 min on the calendar; the page says 15–30
   const [tz, setTz] = useState(null);
   const [guess, setGuess] = useState(null);
   useEffect(() => { setGuess(guessZone()); }, []);
@@ -133,13 +133,7 @@ export default function BookingPage() {
       <>
         <div className="bk-section-head">
           <h2>Pick a time</h2>
-          <div className="bk-seg" role="radiogroup" aria-label="Meeting length">
-            {(data.lengths || [15, 30]).map((m) => (
-              <button key={m} type="button" role="radio" aria-checked={m === minutes} className={m === minutes ? 'on' : ''} onClick={() => setMinutes(m)}>
-                {m} min
-              </button>
-            ))}
-          </div>
+          <span className="bk-len-note">15–30 min call</span>
         </div>
         <div className="bk-days" role="tablist" aria-label="Day">
           {days.map(([k, list]) => (
@@ -166,7 +160,7 @@ export default function BookingPage() {
           <button type="button" className="bk-back" onClick={() => { setSlot(null); setErr(''); }} aria-label="Pick a different time"><Icon d={I.back} /></button>
           <div>
             <b>{fullLabel(slot, tz)}</b>
-            <span>{minutes} minutes · Google Meet</span>
+            <span>15–30 minutes · Google Meet</span>
           </div>
         </div>
         <h2>Your details</h2>
@@ -205,7 +199,7 @@ export default function BookingPage() {
           <h1>Meet with Makenzie &amp; Collin</h1>
           <p className="bk-intro">A short call to show your city how PermitPath helps new businesses get through permitting, and to hear what your team needs.</p>
           <ul className="bk-chips">
-            <li><Icon d={I.clock} />15 or 30 min</li>
+            <li><Icon d={I.clock} />15–30 min</li>
             <li><Icon d={I.video} />Google Meet</li>
             <li><Icon d={I.free} />No cost</li>
           </ul>
