@@ -1,6 +1,6 @@
 import { json } from '@/lib/server';
 import { googleConfigured, connections, busyTimes } from '@/lib/google';
-import { BOOKING, candidateSlots, freeSlots, lengthOf } from '@/lib/booking';
+import { BOOKING, candidateSlots, freeSlots, lengthOf, maxGapMs } from '@/lib/booking';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,7 +14,7 @@ export async function GET(req) {
     if (!accounts.length) return json({ ...base, open: false, slots: [] });
     const cands = candidateSlots(minutes);
     if (!cands.length) return json({ ...base, open: true, slots: [] });
-    const gap = BOOKING.bufferMinutes * 60000;
+    const gap = maxGapMs();
     const busy = await busyTimes(accounts, new Date(cands[0] - gap), new Date(cands.at(-1) + minutes * 60000 + gap));
     return json({ ...base, open: true, slots: freeSlots(cands, busy, minutes).map((t) => new Date(t).toISOString()) });
   } catch (e) {

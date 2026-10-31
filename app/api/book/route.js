@@ -2,7 +2,7 @@ import crypto from 'node:crypto';
 import { db, json, notify } from '@/lib/server';
 import { PERSON_IDS } from '@/lib/people';
 import { googleConfigured, connections, busyTimes, createEvent } from '@/lib/google';
-import { BOOKING, candidateSlots, freeSlots, lengthOf, checkCityEmail, ensureBookings, formatWhen } from '@/lib/booking';
+import { BOOKING, candidateSlots, freeSlots, lengthOf, checkCityEmail, ensureBookings, formatWhen, maxGapMs } from '@/lib/booking';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,7 +28,7 @@ export async function POST(req) {
   const accounts = await connections();
   if (!accounts.length) return json({ error: 'Booking isn’t open yet.' }, 503);
   const end = f.start + minutes * 60000;
-  const gap = BOOKING.bufferMinutes * 60000;
+  const gap = maxGapMs();
   const busy = await busyTimes(accounts, new Date(f.start - gap), new Date(end + gap));
   if (!freeSlots([f.start], busy, minutes).length) return json({ error: 'Someone just took that time. Please pick another.', code: 'taken' }, 409);
 
