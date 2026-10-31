@@ -5,11 +5,30 @@ const STATES = ['AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'DC', 'FL', 'GA'
   'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC', 'SD', 'TN',
   'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'];
 
-const myTz = () => Intl.DateTimeFormat().resolvedOptions().timeZone;
-const fmt = (iso, o) => new Intl.DateTimeFormat('en-US', o).format(new Date(iso));
-const dayKey = (iso) => new Intl.DateTimeFormat('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(iso));
-const timeLabel = (iso) => fmt(iso, { hour: 'numeric', minute: '2-digit' });
-const fullLabel = (iso) => fmt(iso, { weekday: 'long', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZoneName: 'short' });
+// US time zones people pick from before seeing times. Arizona is separate because it skips daylight saving.
+const ZONES = [
+  { id: 'America/New_York', name: 'Eastern' },
+  { id: 'America/Chicago', name: 'Central' },
+  { id: 'America/Denver', name: 'Mountain' },
+  { id: 'America/Phoenix', name: 'Arizona' },
+  { id: 'America/Los_Angeles', name: 'Pacific' },
+  { id: 'America/Anchorage', name: 'Alaska' },
+  { id: 'Pacific/Honolulu', name: 'Hawaii' },
+];
+const zoneName = (tz) => ZONES.find((z) => z.id === tz)?.name || tz;
+// The browser's zone, matched to one of ours by its current offset, so we can mark it "Looks like yours".
+function guessZone() {
+  try {
+    const mine = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (ZONES.some((z) => z.id === mine)) return mine;
+    const off = (tz) => new Intl.DateTimeFormat('en-US', { timeZone: tz, timeZoneName: 'longOffset' }).format(new Date()).split(' ').pop();
+    return ZONES.find((z) => off(z.id) === off(mine))?.id || null;
+  } catch { return null; }
+}
+const fmt = (iso, o, tz) => new Intl.DateTimeFormat('en-US', { ...o, timeZone: tz || undefined }).format(new Date(iso));
+const dayKey = (iso, tz) => new Intl.DateTimeFormat('en-CA', { timeZone: tz || undefined, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(iso));
+const timeLabel = (iso, tz) => fmt(iso, { hour: 'numeric', minute: '2-digit' }, tz);
+const fullLabel = (iso, tz) => fmt(iso, { weekday: 'long', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZoneName: 'short' }, tz);
 
 const Icon = ({ d, ...p }) => (
   <svg viewBox="0 0 24 24" aria-hidden="true" {...p}><path d={d} /></svg>
@@ -34,6 +53,9 @@ export default function BookingPage() {
   const [err, setErr] = useState('');
   const [done, setDone] = useState(null);
   const [minutes, setMinutes] = useState(30);
+  const [tz, setTz] = useState(null);
+  const [guess, setGuess] = useState(null);
+  useEffect(() => { setGuess(guessZone()); }, []);
 
   const load = (m = minutes) => fetch(`/api/book/slots?minutes=${m}`, { cache: 'no-store' }).then((r) => r.json()).then(setData)
     .catch(() => setData({ open: false, slots: [], error: 'We couldn’t load open times. Check your connection and refresh.' }));
@@ -41,9 +63,9 @@ export default function BookingPage() {
 
   const days = useMemo(() => {
     const m = new Map();
-    for (const s of data?.slots || []) { const k = dayKey(s); if (!m.has(k)) m.set(k, []); m.get(k).push(s); }
+    for (const s of data?.slots || []) { const k = dayKey(s, tz); if (!m.has(k)) m.set(k, []); m.get(k).push(s); }
     return [...m.entries()];
-  }, [data]);
+  }, [data, tz]);
   useEffect(() => { if (days.length && !days.some(([k]) => k === day)) setDay(days[0][0]); }, [days, day]);
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
@@ -63,6 +85,7 @@ export default function BookingPage() {
   };
 
   const step = done ? 3 : slot ? 2 : 1;
+  const clockIn = (z) => fmt(Date.now(), { hour: 'numeric', minute: '2-digit' }, z);
 
   let body;
   if (done) {
@@ -70,7 +93,7 @@ export default function BookingPage() {
       <div className="bk-done">
         <div className="bk-done-mark"><Icon d={I.check} /></div>
         <h2>You’re booked!</h2>
-        <p className="bk-done-when">{fullLabel(done)}</p>
+        <p className="bk-done-when">{fullLabel(done, tz)}</p>
         <p>A calendar invite with a Google Meet link is on its way to <b>{form.email}</b>. We’re looking forward to meeting you.</p>
       </div>
     );
@@ -90,6 +113,20 @@ export default function BookingPage() {
         <p>Email <a href="mailto:makenzie@permitpathcities.com">makenzie@permitpathcities.com</a> and we’ll find a time that works.</p>
       </div>
     );
+  } else if (!tz) {
+    body = (
+      <>
+        <div className="bk-section-head"><h2>What time zone are you in?</h2></div>
+        <div className="bk-zones" role="radiogroup" aria-label="Your time zone">
+          {ZONES.map((z) => (
+            <button key={z.id} type="button" role="radio" aria-checked={false} className={`bk-zone${z.id === guess ? ' guess' : ''}`} onClick={() => setTz(z.id)}>
+              <b>{z.name}</b>
+              <span>{clockIn(z.id)} now{z.id === guess ? ' · looks like yours' : ''}</span>
+            </button>
+          ))}
+        </div>
+      </>
+    );
   } else if (!slot) {
     const times = days.find(([k]) => k === day)?.[1] || [];
     body = (
@@ -107,18 +144,18 @@ export default function BookingPage() {
         <div className="bk-days" role="tablist" aria-label="Day">
           {days.map(([k, list]) => (
             <button key={k} type="button" role="tab" aria-selected={k === day} className={`bk-day${k === day ? ' on' : ''}`} onClick={() => setDay(k)}>
-              <span className="bk-day-wd">{fmt(list[0], { weekday: 'short' })}</span>
-              <span className="bk-day-n">{fmt(list[0], { day: 'numeric' })}</span>
-              <span className="bk-day-m">{fmt(list[0], { month: 'short' })}</span>
+              <span className="bk-day-wd">{fmt(list[0], { weekday: 'short' }, tz)}</span>
+              <span className="bk-day-n">{fmt(list[0], { day: 'numeric' }, tz)}</span>
+              <span className="bk-day-m">{fmt(list[0], { month: 'short' }, tz)}</span>
             </button>
           ))}
         </div>
         <p className="bk-dayline">
-          <b>{day && times[0] ? fmt(times[0], { weekday: 'long', month: 'long', day: 'numeric' }) : ''}</b>
-          <span>Times in {myTz().replace(/_/g, ' ')}</span>
+          <b>{day && times[0] ? fmt(times[0], { weekday: 'long', month: 'long', day: 'numeric' }, tz) : ''}</b>
+          <span>{zoneName(tz)} Time · <button type="button" className="bk-link" onClick={() => setTz(null)}>Change</button></span>
         </p>
         <div className="bk-times">
-          {times.map((s) => <button key={s} type="button" className="bk-time" onClick={() => setSlot(s)}>{timeLabel(s)}</button>)}
+          {times.map((s) => <button key={s} type="button" className="bk-time" onClick={() => setSlot(s)}>{timeLabel(s, tz)}</button>)}
         </div>
       </>
     );
@@ -128,7 +165,7 @@ export default function BookingPage() {
         <div className="bk-picked">
           <button type="button" className="bk-back" onClick={() => { setSlot(null); setErr(''); }} aria-label="Pick a different time"><Icon d={I.back} /></button>
           <div>
-            <b>{fullLabel(slot)}</b>
+            <b>{fullLabel(slot, tz)}</b>
             <span>{minutes} minutes · Google Meet</span>
           </div>
         </div>
