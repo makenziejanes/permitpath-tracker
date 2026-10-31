@@ -1,0 +1,30 @@
+/* Public booking page. Uses the color tokens from globals.css. */
+.bk { max-width: 640px; margin: 0 auto; padding: 28px 16px 48px; display: grid; gap: 18px; }
+.bk-head { display: flex; align-items: center; gap: 14px; }
+.bk-head img { border-radius: 12px; flex: none; }
+.bk-brand { margin: 0; font: 800 13px/1 var(--display); letter-spacing: 0.08em; text-transform: uppercase; color: var(--sign); }
+.bk-head h1 { font-size: clamp(24px, 6vw, 32px); font-weight: 900; }
+.bk-intro { margin: 0; color: var(--muted); }
+.bk-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); box-shadow: var(--shadow); padding: 20px; display: grid; gap: 14px; }
+.bk-card h2 { font-size: 22px; font-weight: 800; }
+.bk-card p { margin: 0; }
+.bk-muted { color: var(--muted); font-weight: 400; }
+.bk-small { font-size: 13px; }
+.bk-days { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; }
+.bk-day { flex: none; min-height: 44px; padding: 0 14px; border-radius: var(--r-md); border: 1px solid var(--line); background: var(--paper); font-weight: 600; font-size: 14px; }
+.bk-day.on { background: var(--sign); border-color: var(--sign); color: #fff; }
+.bk-times { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; }
+.bk-time { min-height: 44px; border-radius: var(--r-md); border: 1px solid var(--approved); background: transparent; color: var(--approved); font-weight: 700; }
+.bk-time:hover { background: var(--approved-soft); }
+.bk-form label { display: grid; gap: 6px; font-weight: 600; font-size: 14px; }
+.bk-form input, .bk-form select, .bk-form textarea { min-height: 44px; padding: 10px 12px; border-radius: var(--r-md); border: 1px solid var(--line); background: var(--paper); font-weight: 400; font-size: 16px; width: 100%; }
+.bk-row { display: grid; grid-template-columns: 1fr 110px; gap: 12px; }
+.bk-picked { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 14px; border-radius: var(--r-md); background: var(--approved-soft); }
+.bk-link { border: 0; background: none; color: var(--approved); font-weight: 700; text-decoration: underline; padding: 4px; }
+.bk-submit { min-height: 48px; border: 0; border-radius: var(--r-md); background: var(--sign); color: #fff; font-weight: 700; font-size: 16px; }
+.bk-submit:disabled { opacity: 0.6; }
+.bk-err { color: var(--behind); font-weight: 600; }
+.bk-hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.bk-done h2 { color: var(--approved); }
+.bk a { color: var(--approved); }
+.bk-len { display: flex; gap: 8px; }

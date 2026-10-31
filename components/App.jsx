@@ -83,6 +83,8 @@ export default function App() {
     setMounted(true);
     setMe(store.get('pp-me'));
     load();
+    // Coming back from Google's "Allow" screen: reopen Settings so the result shows there.
+    if (new URLSearchParams(location.search).has('google')) setSettingsOpen(true);
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => {});
     const onVis = () => { if (document.visibilityState === 'visible') load(); };
     const onMsg = (e) => { if (e.data?.type === 'refresh') load(); };
