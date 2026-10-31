@@ -134,6 +134,7 @@ export default function App() {
   const evening = data.hour >= 17;
 
   const setItems = (person, fn) => setData((d) => ({ ...d, items: { ...d.items, [person]: fn(d.items[person]) } }));
+  const setChecklist = (person, fn) => setData((d) => ({ ...d, checklist: { ...d.checklist, [person]: fn(d.checklist?.[person] || []) } }));
 
   const toggle = async (item) => {
     const before = dayApproved(data.items[me]);
@@ -147,7 +148,32 @@ export default function App() {
   };
 
   const addItem = async (text) => { const { item } = await run('addItem', { text }); setItems(me, (l) => [...l, item]); load(); };
-  const delItem = async (item) => { setItems(me, (l) => l.filter((i) => i.id !== item.id)); await run('deleteItem', { id: item.id }).catch(() => {}); load(); };
+  const delItem = async (item) => {
+    setItems(me, (l) => l.filter((i) => i.id !== item.id));
+    setChecklist(me, (l) => l.filter((i) => i.id !== item.id));
+    await run('deleteItem', { id: item.id }).catch(() => {});
+    load();
+  };
+
+  const addChecklist = async (text) => { const { item } = await run('addItem', { text, list: 'checklist' }); setChecklist(me, (l) => [...l, item]); load(); };
+  const toggleChecklist = async (item) => {
+    setChecklist(me, (l) => l.map((i) => (i.id === item.id ? { ...i, done: !i.done, done_date: !i.done ? data.today : null } : i)));
+    await run('toggleItem', { id: item.id, done: !item.done }).catch(() => {});
+    load();
+  };
+  // Checklist → today's focus, and back. Both update the screen first so the slide feels instant.
+  const focus = async (item) => {
+    setChecklist(me, (l) => l.filter((i) => i.id !== item.id));
+    setItems(me, (l) => [...l, { ...item, source: 'plan', plan_date: data.today }]);
+    try { await run('focusItem', { id: item.id }); say('Moved to today’s focus.'); } catch { /* toast shown */ }
+    load();
+  };
+  const unfocus = async (item) => {
+    setItems(me, (l) => l.filter((i) => i.id !== item.id));
+    setChecklist(me, (l) => [...l, { ...item, source: 'checklist' }].sort((a, b) => a.id - b.id));
+    try { await run('unfocusItem', { id: item.id }); say('Back on your checklist.'); } catch { /* toast shown */ }
+    load();
+  };
   const sharePlan = async () => {
     try { await run('postPlan'); say(`Plan shared with ${nameOf(partner)}.`); load(); setLogVersion((v) => v + 1); } catch {}
   };
@@ -197,9 +223,10 @@ export default function App() {
             <Stats data={data} />
             <div className="cols">
               {order.map((p) => (
-                <TodayColumn key={p} person={p} items={data.items[p]} today={data.today} mine={p === me}
-                  entries={data.entriesToday} score={data.scores[p]}
-                  onToggle={toggle} onAdd={addItem} onDelete={delItem} onSharePlan={sharePlan} />
+                <TodayColumn key={p} person={p} items={data.items[p]} checklist={data.checklist?.[p] || []}
+                  today={data.today} mine={p === me} entries={data.entriesToday} score={data.scores[p]}
+                  onToggle={toggle} onAdd={addItem} onDelete={delItem} onSharePlan={sharePlan}
+                  onFocus={focus} onUnfocus={unfocus} onToggleChecklist={toggleChecklist} onAddChecklist={addChecklist} />
               ))}
             </div>
           </>

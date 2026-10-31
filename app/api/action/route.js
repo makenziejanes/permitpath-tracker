@@ -16,11 +16,28 @@ async function logGoal(sql, goal, person, action, detail) {
 }
 
 const handlers = {
-  async addItem(sql, { actor, text }) {
+  async addItem(sql, { actor, text, list }) {
     text = clean(text);
     need(text, 'Type something to add.');
+    const source = list === 'checklist' ? 'checklist' : 'plan';
     const [item] = await sql`insert into items (person, text, source, plan_date)
-      values (${actor}, ${text}, 'plan', ${today()}) returning *`;
+      values (${actor}, ${text}, ${source}, ${today()}) returning *`;
+    return { item };
+  },
+
+  // Morning move: a checklist item becomes one of today's commitments and starts counting toward the score.
+  async focusItem(sql, { actor, id }) {
+    const [item] = await sql`update items set source = 'plan', plan_date = ${today()}, updated_at = now()
+      where id = ${id} and person = ${actor} and source = 'checklist' and done = false returning *`;
+    need(item, 'That item is no longer on your checklist.');
+    return { item };
+  },
+
+  // Undo for today only. Items carried over from an earlier day stay committed so the score stays honest.
+  async unfocusItem(sql, { actor, id }) {
+    const [item] = await sql`update items set source = 'checklist', updated_at = now()
+      where id = ${id} and person = ${actor} and source = 'plan' and done = false and plan_date = ${today()} returning *`;
+    need(item, 'Only items added today can go back to the checklist.');
     return { item };
   },
 

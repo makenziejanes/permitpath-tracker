@@ -1,4 +1,4 @@
-import { db, ready, json, checkCode, visibleItems, computeStreak, computeScores, pushConfigured } from '@/lib/server';
+import { db, ready, json, checkCode, visibleItems, checklistItems, computeStreak, computeScores, pushConfigured } from '@/lib/server';
 import { today, hourNow } from '@/lib/dates';
 import { PERSON_IDS } from '@/lib/people';
 
@@ -10,8 +10,9 @@ export async function GET(req) {
     await ready();
     const sql = db();
     const t = today();
-    const [items, entries, goals, wins, openBlockers, checkins, planned] = await Promise.all([
+    const [items, checklist, entries, goals, wins, openBlockers, checkins, planned] = await Promise.all([
       visibleItems(sql, t),
+      checklistItems(sql, t),
       sql`select id, person, kind, created_at from entries where date = ${t} order by created_at`,
       sql`select * from goals order by created_at, id`,
       sql`select * from wins order by coalesce(said_on, '') desc, created_at desc`,
@@ -19,11 +20,12 @@ export async function GET(req) {
       sql`select distinct person, date from entries where kind = 'checkin'`,
       sql`select person, plan_date, done from items where source in ('plan', 'request')`,
     ]);
-    const byPerson = Object.fromEntries(PERSON_IDS.map((p) => [p, items.filter((i) => i.person === p)]));
+    const byPerson = (list) => Object.fromEntries(PERSON_IDS.map((p) => [p, list.filter((i) => i.person === p)]));
     return json({
       today: t,
       hour: hourNow(),
-      items: byPerson,
+      items: byPerson(items),
+      checklist: byPerson(checklist),
       entriesToday: entries,
       goals,
       wins,

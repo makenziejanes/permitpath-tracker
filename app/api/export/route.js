@@ -22,7 +22,8 @@ export async function GET(req) {
   let rows, name;
 
   if (what === 'items') {
-    const items = await sql`select * from items order by plan_date, id`;
+    // Checklist items aren't commitments until they're moved to a day, so they stay out of the export.
+    const items = await sql`select * from items where source <> 'checklist' order by plan_date, id`;
     rows = [['item_id', 'person', 'planned_for', 'source', 'requested_by', 'item', 'done', 'done_on', 'counts_toward_score']];
     for (const i of items) {
       rows.push([i.id, nameOf(i.person), i.plan_date, i.source, i.from_person ? nameOf(i.from_person) : '',

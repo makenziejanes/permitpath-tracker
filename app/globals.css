@@ -216,6 +216,26 @@ label input, label textarea, label select { font-weight: 400; font-size: 16px; }
 .item-x:hover, .item-x:focus-visible { opacity: 1; }
 .add { display: flex; gap: 8px; }
 .add input { flex: 1; }
+.item-move { flex: none; width: 36px; height: 44px; border: 0; background: none; color: var(--muted); display: grid; place-items: center; }
+.item-move svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.item-move:hover, .item-move:focus-visible { color: var(--c, var(--sign)); }
+.item-move-up { color: var(--c, var(--sign)); }
+
+/* ---------- today's focus + checklist ---------- */
+.focus-head, .cl-head { font: 800 13px/1.2 var(--display); text-transform: uppercase; letter-spacing: 0.06em; color: var(--c, var(--muted)); margin: 2px 0 -4px; display: flex; align-items: center; gap: 8px; }
+.checklist { border-top: 1px dashed var(--line); padding-top: 12px; margin-top: 4px; display: grid; gap: 8px; }
+.cl-head { color: var(--muted); }
+.cl-count { font: 700 12px/1 var(--body); color: var(--muted); background: var(--paper); border: 1px solid var(--line); border-radius: 999px; padding: 3px 8px; letter-spacing: 0; }
+.cl-hint { margin: 0; font-size: 13.5px; color: var(--muted); }
+details.checklist > summary { cursor: pointer; font: 800 13px/1.2 var(--display); text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); display: flex; align-items: center; gap: 8px; min-height: 32px; }
+details.checklist > summary::-webkit-details-marker { display: none; }
+details.checklist > summary::after { content: '▸'; margin-left: auto; font-size: 14px; }
+details.checklist[open] > summary::after { content: '▾'; }
+.cl-item { position: relative; overflow: hidden; touch-action: pan-y; display: block; }
+.cl-row { position: relative; display: flex; align-items: flex-start; background: var(--surface); border-radius: var(--r-sm); transition: transform 0.18s ease-out; }
+.cl-reveal { position: absolute; inset: 0; display: flex; align-items: center; padding-left: 14px; border-radius: var(--r-sm); background: var(--c-soft, var(--approved-soft)); color: var(--ink); font-size: 14px; font-weight: 700; }
+.cl-ready .cl-reveal { background: var(--c, var(--sign)); color: #fff; }
+@media (prefers-reduced-motion: reduce) { .cl-row { transition: none; } }
 
 /* ---------- stamp ---------- */
 .stamp { display: inline-grid; justify-items: center; color: var(--approved); border: 3px double var(--approved); border-radius: 6px; padding: 4px 8px 3px; transform: rotate(-8deg); font-family: var(--display); line-height: 1; mix-blend-mode: multiply; }
